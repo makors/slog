@@ -1,0 +1,20 @@
+{
+  "name": "@slog/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "slog": "./index.ts"
+  },
+  "scripts": {
+    "dev": "bun run index.ts",
+    "build": "bun -e \"console.log('No CLI build configured yet')\"",
+    "lint": "bun -e \"console.log('No CLI lint configured yet')\"",
+    "test": "bun -e \"console.log('No CLI tests configured yet')\""
+  },
+  "dependencies": {
+    "openai": "^6.36.0",
+    "picocolors": "^1.1.1",
+    "prompts": "^2.4.2"
+  }
+}
