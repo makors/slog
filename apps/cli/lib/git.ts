@@ -43,3 +43,34 @@ export async function getGitRoot(): Promise<string | null> {
   const result = await git(["rev-parse", "--show-toplevel"]);
   return result.success ? (result.stdout.trim() || null) : null;
 }
+
+/*
+ * Counts commits reachable from a git revision argument.
+ * Accepts the same single revision/range value used by `git rev-list --count`.
+ */
+export async function countGitCommits(revision: string): Promise<number> {
+  const result = await git(["rev-list", "--count", revision]);
+  if (!result.success) {
+    throw new Error(result.stderr.trim() || "failed to count commits");
+  }
+
+  const count = Number.parseInt(result.stdout.trim(), 10);
+  if (!Number.isFinite(count)) {
+    throw new Error("failed to count commits");
+  }
+
+  return count;
+}
+
+/*
+ * Returns true when the working tree has staged,
+ * unstaged, or untracked changes.
+ */
+export async function hasUncommittedChanges(): Promise<boolean> {
+  const result = await git(["status", "--porcelain"]);
+  if (!result.success) {
+    throw new Error(result.stderr.trim() || "failed to read git status");
+  }
+
+  return result.stdout.trim().length > 0;
+}

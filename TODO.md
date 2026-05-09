@@ -1,2 +1,3 @@
-[ ] implement proper LLM secrets (secrets.json?)
 [ ] test ci/cd
+[ ] fix the product problem of "which git commits"? how do we track it...
+[ ] read claude md? agent md? hm

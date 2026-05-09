@@ -39,6 +39,26 @@ slog gen e23fab --release v1.2.0 # append one commit on wednesday
 slog gen --release v1.2.0 # append all commits since last release
 ```
 
+## LLM support
+
+`slog gen` is OpenAI-first. It expects a Chat Completions API that supports tool calls and structured JSON schema responses, because generation works by letting the model inspect git history with tools and then return a typed changelog draft.
+
+OpenAI, Fireworks, and Ollama are the primary supported targets. Other OpenAI-compatible providers may work, but they are best-effort: many providers support only part of the required surface, such as JSON mode without JSON schema, structured outputs without tool calls, or provider/model-specific subsets of the Chat Completions API.
+
+Configure the provider with:
+
+```sh
+slog gen --configure-llm
+```
+
+or set:
+
+```sh
+SLOG_LLM_API_KEY
+SLOG_LLM_BASE_URL
+SLOG_LLM_MODEL
+```
+
 when you're done shipping, [ship it all on a friday](https://blog.railway.com/p/how-we-write-changelogs) (or slog it!):
 
 ```sh
@@ -53,3 +73,6 @@ bun run dev:cli
 bun run build
 bun test
 ```
+
+# coding tools used
+codex, cursor!

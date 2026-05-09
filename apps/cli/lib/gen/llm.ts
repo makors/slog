@@ -1,11 +1,11 @@
 import pc from "picocolors";
-import { ask, askSecret, info, isInteractive, success, warn } from "./cli";
+import { ask, askSecret, info, isInteractive, success, warn } from "../cli";
 import {
   getLlmConfig,
   LLM_CONFIG_LOCATION,
   setLlmConfig,
   type LlmConfig,
-} from "./config";
+} from "../config";
 
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const DEFAULT_MODEL = "gpt-5.4-mini";
@@ -60,10 +60,11 @@ export async function promptLlmConfig(): Promise<LlmConfig> {
   console.log(`${pc.bold("configure llm for changelog generation")}`);
   console.log(
     pc.dim(`
-to use \`slog gen\`, you'll need access to any openai-compatible api endpoint.
-this can be openai, groq, ollama, fireworks, etc. - as long as it's openai-compatible.
+to use \`slog gen\`, you'll need access to an openai-style chat completions endpoint.
+slog is openai-first; openai, fireworks, and ollama are the primary supported targets.
+other openai-compatible providers may work if they support tool calls and structured json schema responses.
 
-you will need a openai-compatible base url, an api key, and a model name.
+you will need a base url, an api key, and a model name.
 `));
 
   const baseUrl = await ask("base url:", DEFAULT_BASE_URL);

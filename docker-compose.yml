@@ -1,0 +1,40 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-slog}
+      POSTGRES_USER: ${POSTGRES_USER:-slog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-slog}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U slog -d slog"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: ${DOCKER_DATABASE_URL:-postgres://slog:slog@db:5432/slog}
+      NEXT_TELEMETRY_DISABLED: "1"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - root_node_modules:/app/node_modules
+      - web_next:/app/apps/web/.next
+    command: ["bun", "run", "--cwd", "apps/web", "dev", "--hostname", "0.0.0.0"]
+
+volumes:
+  postgres_data:
+  root_node_modules:
+  web_next:

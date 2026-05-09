@@ -1,18 +1,43 @@
 import { type ProjectConfig, getConfig, setConfig, setToken } from "../lib/config";
 import { ensureChangelogDir } from "../lib/changelog";
 import { getGitRoot } from "../lib/git";
-import { info, success } from "../lib/cli";
+import { askSecret, success } from "../lib/cli";
 import pc from "picocolors";
 
 const DEFAULT_URL = "http://localhost:3000"; // TODO: prod url
+const TOKEN_PATTERN = /^slog_[a-z0-9]{32}$/;
 
-export async function init(token: string | undefined, url = DEFAULT_URL) {
-  if (!token || !/^slog_[a-z0-9]{32}$/.test(token)) {
+async function readToken(url: string): Promise<string> {
+  let token = process.env.SLOG_TOKEN;
+  if (!token) {
+    try {
+      token = await askSecret("project token:");
+    } catch (error) {
+      if ((error as Error).message === "cannot prompt in a non-interactive shell") {
+        throw new Error("cannot prompt for token in a non-interactive shell\n\nset SLOG_TOKEN or run slog init in an interactive terminal");
+      }
+
+      throw error;
+    }
+  }
+
+  if (!TOKEN_PATTERN.test(token)) {
     throw new Error(`missing or invalid token
 
-usage: slog init <token> [url]
-visit ${url}/new to create a project and get your token`);
+visit ${url}/new to create a project and get your token
+then run: slog init [url]`);
+// TODO: implement new token flow
   }
+
+  return token;
+}
+
+export async function init(url = DEFAULT_URL) {
+  if (TOKEN_PATTERN.test(url)) {
+    throw new Error("tokens are prompted interactively now\n\nrun: slog init [url]");
+  }
+
+  const token = await readToken(url);
 
   const gitRoot = await getGitRoot();
 

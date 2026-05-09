@@ -1,3 +1,5 @@
+#!/usr/bin/env bun
+
 import { parseArgs } from "util";
 import pc from "picocolors";
 import { gen } from "./commands/gen";
@@ -16,61 +18,139 @@ ${pc.bold("commands:")}
   publish    publish local changelogs
 
 ${pc.bold("usage:")}
-  slog init <token> [url]
-             url: your slog instance (self-hosters only; defaults to hosted slog)
-  slog gen [range-or-commit] [--release <version>] [--configure-llm]
-  slog publish
+  slog <command> [options]
+  slog <command> --help
 
 ${pc.bold("options:")}
   -h, --help show this help screen
   -v, --version shows the cli version
-  --release <tag> specifies the release tag (ex. v1.0.0)
-  --configure-llm interactively configure your llm settings, then exit
-
-${pc.bold("environment variables:")}
-  SLOG_TOKEN - your project token (overrides ~/.config/slog/{projectId})
-  SLOG_LLM_API_KEY - your llm api key (overrides ~/.config/slog/llm.json)
-  SLOG_LLM_MODEL - your llm model (overrides ~/.config/slog/llm.json)
-  SLOG_LLM_BASE_URL - your llm base url (overrides ~/.config/slog/llm.json)
 
 ${pc.dim("full workflow guide: https://github.com/makors/slog#workflow")}
 `;
 
-const { values: flags, positionals } = parseArgs({
-  args: Bun.argv.slice(2),
-  allowPositionals: true,
-  options: {
-    help: { type: "boolean", short: "h" },
-    version: { type: "boolean", short: "v" },
-    release: { type: "string" },
-    "configure-llm": { type: "boolean" },
-  },
-});
+const INIT_HELP_TEXT = `${pc.bold("slog init")} 🪵
+
+link this repo to slog
+
+${pc.bold("usage:")}
+  slog init [url]
+
+${pc.bold("arguments:")}
+  url        your slog instance (self-hosters only; defaults to hosted slog)
+
+${pc.bold("options:")}
+  -h, --help show this help screen
+
+${pc.bold("environment variables:")}
+  SLOG_TOKEN - your project token (overrides ~/.config/slog/{projectId})
+`;
+
+const GEN_HELP_TEXT = `${pc.bold("slog gen")} 🪵
+
+generate a changelog from local git history
+
+${pc.bold("usage:")}
+  slog gen [range-or-commit] --release <version> [--configure-llm] [--force] [--instructions <text>]
+
+${pc.bold("arguments:")}
+  range-or-commit  git commit range or single commit to analyze
+
+${pc.bold("options:")}
+  -h, --help show this help screen
+  --release <tag> specifies the changelog release version (ex. v1.0.0)
+  --configure-llm interactively configure your llm settings, then exit
+  --force allows slog gen to continue for very large ranges (51-100 commits)
+  --instructions <text> guides the AI toward important changes or tone
+
+${pc.bold("environment variables:")}
+  SLOG_LLM_API_KEY - your llm api key (overrides ~/.config/slog/llm.json)
+  SLOG_LLM_MODEL - your llm model (overrides ~/.config/slog/llm.json)
+  SLOG_LLM_BASE_URL - your llm base url (overrides ~/.config/slog/llm.json)
+`;
+
+const PUBLISH_HELP_TEXT = `${pc.bold("slog publish")} 🪵
+
+publish local changelogs
+
+${pc.bold("usage:")}
+  slog publish
+
+${pc.bold("options:")}
+  -h, --help show this help screen
+
+${pc.bold("environment variables:")}
+  SLOG_TOKEN - your project token (overrides ~/.config/slog/{projectId})
+`;
+
+const COMMAND_HELP_TEXT: Record<string, string> = {
+  init: INIT_HELP_TEXT,
+  gen: GEN_HELP_TEXT,
+  publish: PUBLISH_HELP_TEXT,
+};
+
+function helpTextFor(command: string | undefined) {
+  return command ? COMMAND_HELP_TEXT[command] : undefined;
+}
+
+function parseCliArgs(args: string[]) {
+  if (args[0] === "gen") {
+    const parsed = parseArgs({
+      args: args.slice(1),
+      allowPositionals: true,
+      options: {
+        help: { type: "boolean", short: "h" },
+        release: { type: "string" },
+        "configure-llm": { type: "boolean" },
+        force: { type: "boolean" },
+        instructions: { type: "string" },
+      },
+    });
+
+    return {
+      values: parsed.values,
+      positionals: ["gen", ...parsed.positionals],
+    };
+  }
+
+  return parseArgs({
+    args,
+    allowPositionals: true,
+    options: {
+      help: { type: "boolean", short: "h" },
+      version: { type: "boolean", short: "v" },
+    },
+  });
+}
 
 async function main() {
-  if (flags.version) {
-    console.log("slog v" + CLI_VERSION);
-    process.exit(0);
-  }
-
-  if (flags.help || positionals.length === 0) {
-    console.log(HELP_TEXT);
-    process.exit(0);
-  }
-
-  banner(CLI_VERSION);
-
   try {
-    const [command, arg, url] = positionals;
+    const { values: flags, positionals } = parseCliArgs(Bun.argv.slice(2));
+    const helpCommand = positionals[0] === "help" ? positionals[1] : undefined;
+
+    if (flags.version) {
+      console.log("slog v" + CLI_VERSION);
+      process.exit(0);
+    }
+
+    if (flags.help || positionals.length === 0 || positionals[0] === "help") {
+      console.log(helpTextFor(helpCommand ?? positionals[0]) ?? HELP_TEXT);
+      process.exit(0);
+    }
+
+    banner(CLI_VERSION);
+
+    const [command, arg] = positionals;
 
     switch (command) {
       case "init":
-        await init(arg, url);
+        await init(arg);
         break;
       case "gen":
         await gen(arg, {
           release: flags.release,
           configureLlm: flags["configure-llm"],
+          force: flags.force,
+          instructions: flags.instructions,
         });
         break;
       case "publish":

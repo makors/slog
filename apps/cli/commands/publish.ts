@@ -1,12 +1,11 @@
-import { getConfig, getToken } from "../lib/config";
+import { getToken, requireConfig } from "../lib/config";
 import { success } from "../lib/cli";
 
 export async function publish() {
-  const config = await getConfig();
-  if (!config) throw new Error("missing .slog.json\n\nrun: slog init <token>");
+  const config = await requireConfig();
 
   const token = await getToken(config.projectId);
-  if (!token) throw new Error("missing token\n\nset SLOG_TOKEN or run: slog init <token>");
+  if (!token) throw new Error("missing token\n\nset SLOG_TOKEN or run: slog init");
 
   success(`loaded project ${config.projectId}`);
   success(`ready to publish to ${config.baseUrl}`);

@@ -53,6 +53,21 @@ export async function getConfig(root?: string): Promise<ProjectConfig | null> {
   return await file.json();
 }
 
+function isProjectConfig(value: unknown): value is ProjectConfig {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+  const config = value as Record<string, unknown>;
+  return isNonEmptyString(config.projectId) && isNonEmptyString(config.baseUrl);
+}
+
+export async function requireConfig(root?: string): Promise<ProjectConfig> {
+  const config = await getConfig(root);
+  if (!config) throw new Error("missing .slog.json\n\nrun: slog init");
+  if (!isProjectConfig(config)) throw new Error("invalid .slog.json\n\nrun: slog init");
+
+  return config;
+}
+
 export async function setConfig(config: ProjectConfig, root?: string) {
   await Bun.write(configPath(root), `${JSON.stringify(config, null, 2)}\n`);
 }
