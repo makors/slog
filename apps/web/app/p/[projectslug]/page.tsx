@@ -1,14 +1,65 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { MarkdownContent } from "@/lib/markdown-renderer"
 import { isProjectSlug } from "@/lib/project-slug"
-import { getCachedPublicChangelog } from "@/lib/public-changelog"
+import {
+  getCachedPublicChangelog,
+  getCachedPublicProject,
+} from "@/lib/public-changelog"
+import { changelogDescription, projectDisplayName } from "@/lib/seo"
 import { cn } from "@/lib/utils"
 
 import { VersionActions } from "./_components/version-actions"
 
 export const dynamic = "force-static"
 export const revalidate = false
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ projectslug: string }>
+}): Promise<Metadata> {
+  const { projectslug } = await params
+  if (!isProjectSlug(projectslug)) notFound()
+
+  const [project, releases] = await Promise.all([
+    getCachedPublicProject(projectslug),
+    getCachedPublicChangelog(projectslug),
+  ])
+
+  if (!project || !releases) notFound()
+
+  const name = projectDisplayName(project)
+  const latestRelease = releases[0]
+  const title = `${name} changelog`
+  const description = latestRelease
+    ? changelogDescription(
+        latestRelease.markdown,
+        `Release notes and changelog for ${name}.`
+      )
+    : `Release notes and changelog for ${name}.`
+  const url = `/p/${projectslug}`
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  }
+}
 
 export default async function ProjectPage({
   params,
@@ -20,10 +71,17 @@ export default async function ProjectPage({
 
   const releases = await getCachedPublicChangelog(projectslug)
   if (!releases) notFound()
+  const hasReleases = releases.length > 0
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-6 py-4 md:py-12">
-      {releases.length > 0 ? (
+    <main
+      className={cn(
+        "mx-auto w-full max-w-4xl px-6 py-4 md:py-12",
+        !hasReleases &&
+          "flex min-h-[calc(100vh-12rem)] items-center justify-center"
+      )}
+    >
+      {hasReleases ? (
         <div className="flex flex-col gap-14 sm:gap-0">
           {releases.map((release, index) => {
             const isFirst = index === 0
@@ -102,11 +160,8 @@ function EmptyState() {
   ]
 
   return (
-    <div className="relative">
-      <div
-        className="pointer-events-none select-none"
-        aria-hidden
-      >
+    <div className="relative w-full">
+      <div className="pointer-events-none select-none" aria-hidden>
         <div className="flex flex-col gap-14 opacity-[0.3] blur-[4px] sm:gap-0">
           {ghostEntries.map((entry, index) => {
             const isFirst = index === 0
@@ -120,7 +175,12 @@ function EmptyState() {
                 )}
               >
                 <div className="mb-3 flex justify-end sm:mb-0 sm:pt-[3px]">
-                  <span className={cn("h-3 rounded-full bg-muted-foreground/50", entry.dateWidth)} />
+                  <span
+                    className={cn(
+                      "h-3 rounded-full bg-muted-foreground/50",
+                      entry.dateWidth
+                    )}
+                  />
                 </div>
                 <div className="relative hidden justify-center sm:flex">
                   {!isFirst && (
@@ -142,7 +202,10 @@ function EmptyState() {
                     {entry.lines.map((width, i) => (
                       <div
                         key={i}
-                        className={cn("h-3 rounded bg-muted-foreground/25", width)}
+                        className={cn(
+                          "h-3 rounded bg-muted-foreground/25",
+                          width
+                        )}
                       />
                     ))}
                   </div>

@@ -1,29 +1,21 @@
 import pc from "picocolors";
 import type { ChangelogDraft } from "./schema";
 
-const CATEGORY_LABELS: Record<ChangelogDraft["changes"][number]["category"], string> = {
-  breaking: "Breaking",
-  feature: "Feature",
-  fix: "Fix",
+const IMPACT_LABELS: Record<ChangelogDraft["changes"][number]["impact"], string> = {
+  breaking: "breaking",
+  notable: "notable",
+  minor: "minor",
 };
 
-function sentenceCase(value: string): string {
-  return value ? value[0].toUpperCase() + value.slice(1) : value;
-}
-
-export function renderChangelogDraft(draft: ChangelogDraft): string {
+export function renderChangelogSummary(draft: ChangelogDraft): string {
   if (draft.changes.length === 0) {
-    return pc.dim("No changelog-worthy changes were found in this range.");
+    return pc.dim("no changelog-worthy changes were found in this range.");
   }
 
-  const lines: string[] = [
-    pc.dim(`${sentenceCase(draft.confidence)} confidence. ${draft.summary}`),
-    "",
-  ];
+  const lines: string[] = [pc.bold("changes found:")];
 
   for (const change of draft.changes) {
-    const detail = change.detailPage ? pc.dim(` (${change.detailPage})`) : "";
-    lines.push(`${pc.dim(`[${CATEGORY_LABELS[change.category]}]`)} ${pc.bold(change.title)} - ${change.summary}${detail}`);
+    lines.push(`- ${change.title} ${pc.dim(`(${IMPACT_LABELS[change.impact]})`)}`);
   }
 
   return lines.join("\n");

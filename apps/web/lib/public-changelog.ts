@@ -28,6 +28,7 @@ export type PublicReleaseDetail = {
   projectId: string
   releaseVersion: string
   releaseTitle: string
+  publishedAt: string
   fileTitle: string
   markdown: string
 }
@@ -164,6 +165,7 @@ export function getCachedPublicReleaseDetail(
           projectId: project.id,
           releaseVersion: projectRelease.version,
           releaseTitle: projectRelease.title,
+          publishedAt: projectRelease.publishedAt,
           fileTitle: projectReleaseFile.title,
           contentMarkdown: projectReleaseFile.contentMarkdown,
         })
@@ -188,6 +190,7 @@ export function getCachedPublicReleaseDetail(
         projectId: row.projectId,
         releaseVersion: row.releaseVersion,
         releaseTitle: row.releaseTitle,
+        publishedAt: row.publishedAt.toISOString(),
         fileTitle: row.fileTitle,
         markdown: row.contentMarkdown,
       }

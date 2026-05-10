@@ -17,8 +17,6 @@ export function DeployPhase({
   siteUrl: string | null;
   onDeployed: (url: string) => void;
 }) {
-  // TODO(deploy-api): Replace this stub with a real deploy kickoff +
-  // status stream (SSE or polling) keyed off `projectId`.
   useEffect(() => {
     if (siteUrl) return;
     const t = setTimeout(() => {

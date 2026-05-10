@@ -1,3 +1,6 @@
-[ ] test ci/cd
-[ ] fix the product problem of "which git commits"? how do we track it...
-[ ] read claude md? agent md? hm
+[ ] prompt re-do
+[ ] code cleanup
+[ ] test ci/cd and full usage / flow for everything
+[ ] deploy to prod
+[ ] record loom video
+[ ] finish readme

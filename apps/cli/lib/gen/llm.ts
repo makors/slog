@@ -8,7 +8,7 @@ import {
 } from "../config";
 
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
-const DEFAULT_MODEL = "gpt-5.4-mini";
+const DEFAULT_MODEL = "gpt-5.5";
 
 const LLM_SETUP_HINT = `missing llm config
 

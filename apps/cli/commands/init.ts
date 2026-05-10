@@ -6,7 +6,7 @@ import { randomUUID } from "node:crypto";
 import { basename } from "node:path";
 import pc from "picocolors";
 
-const DEFAULT_URL = "http://localhost:3000"; // TODO: prod url
+const DEFAULT_URL = "https://slog.makors.xyz";
 const TOKEN_PATTERN = /^slog_[a-z0-9]{32}$/;
 const JOIN_CODE_PATTERN = /^[a-z2-9]{3}-[a-z2-9]{3}-[a-z2-9]{3}$/;
 

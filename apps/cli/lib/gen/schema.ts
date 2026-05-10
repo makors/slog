@@ -3,11 +3,10 @@ import { zodResponseFormat } from "openai/helpers/zod";
 
 export const changelogDraftSchema = z.object({
   summary: z.string().min(1),
-  confidence: z.enum(["high", "medium", "low"]),
   changes: z
     .array(
       z.object({
-        category: z.enum(["breaking", "feature", "fix"]),
+        impact: z.enum(["breaking", "notable", "minor"]),
         title: z.string().min(1),
         summary: z.string().min(1),
         detailPage: z.string().nullable(),

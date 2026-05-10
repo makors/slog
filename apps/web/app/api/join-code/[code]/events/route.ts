@@ -8,7 +8,7 @@ import { subscribeJoinCode } from "@/lib/join-code-events";
 
 export const dynamic = "force-dynamic";
 
-const HEARTBEAT_MS = 25_000;
+const HEARTBEAT_MS = 5_000;
 const JOIN_CODE_PATTERN = /^[a-z2-9]{3}-[a-z2-9]{3}-[a-z2-9]{3}$/;
 
 type EventParams = {

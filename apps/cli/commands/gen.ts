@@ -11,7 +11,7 @@ import {
   GIT_ANALYSIS_PROMPT,
   SHIPWRIGHT_PROMPT,
 } from "../lib/gen/prompt";
-import { renderChangelogDraft } from "../lib/gen/render";
+import { renderChangelogSummary } from "../lib/gen/render";
 import { changelogDraftResponseFormat, parseChangelogDraft, type ChangelogDraft } from "../lib/gen/schema";
 import { createAgentStatus } from "../lib/gen/status";
 import { createGitAnalysisTools, createShipwrightTools } from "../lib/gen/tools";
@@ -98,7 +98,6 @@ export async function gen(gitRef: string | undefined, options: GenOptions = {}) 
   status.start();
 
   let draft: ChangelogDraft;
-  let shipwrightResult = "";
   try {
     status.update("exploring git history");
     const context = await buildGenContext({ gitRef, release, gitRoot });
@@ -118,7 +117,7 @@ export async function gen(gitRef: string | undefined, options: GenOptions = {}) 
 
     phase = "shipwright";
     status.update("writing changelog");
-    shipwrightResult = await runAgent({
+    await runAgent({
       system: SHIPWRIGHT_PROMPT,
       user: buildShipwrightUserPrompt(context, draft, { instructions: options.instructions }),
       tools: createShipwrightTools({ release, releaseDir: releaseFolder.path }),
@@ -133,10 +132,6 @@ export async function gen(gitRef: string | undefined, options: GenOptions = {}) 
   }
 
   const changeLabel = draft.changes.length === 1 ? "change" : "changes";
-  success(`found ${draft.changes.length} ${changeLabel}`);
-  success(`wrote changelog draft to ${releaseFolder.path}\n`);
-  console.log(renderChangelogDraft(draft));
-  if (shipwrightResult.trim()) {
-    console.log(`\n${shipwrightResult.trim()}`);
-  }
+  console.log(renderChangelogSummary(draft));
+  success(`generated ${draft.changes.length} ${changeLabel}; saved to ${releaseFolder.path}`);
 }

@@ -1,32 +1,86 @@
+import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
 import { MarkdownContent } from "@/lib/markdown-renderer"
 import { isProjectSlug } from "@/lib/project-slug"
-import { getCachedPublicReleaseDetail } from "@/lib/public-changelog"
+import {
+  getCachedPublicProject,
+  getCachedPublicReleaseDetail,
+} from "@/lib/public-changelog"
+import {
+  changelogDescription,
+  projectDisplayName,
+  releaseDetailPath,
+} from "@/lib/seo"
 
 import { DetailBackLink } from "./detail-back-link"
 
 export const dynamic = "force-static"
 export const revalidate = false
 
+type ReleaseDetailParams = {
+  projectslug: string
+  release: string
+  detailpage: string[]
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<ReleaseDetailParams>
+}): Promise<Metadata> {
+  const { projectslug, release, detailpage } = await params
+  validateParams({ projectslug, release, detailpage })
+
+  const detailPath = detailpage.join("/")
+  const [project, row] = await Promise.all([
+    getCachedPublicProject(projectslug),
+    getCachedPublicReleaseDetail(projectslug, release, detailPath),
+  ])
+
+  if (!project || !row) notFound()
+
+  const projectName = projectDisplayName(project)
+  const title = `${row.fileTitle} - ${projectName} ${row.releaseVersion}`
+  const description = changelogDescription(
+    row.markdown,
+    `${row.fileTitle} from the ${projectName} ${row.releaseVersion} changelog.`
+  )
+  const url = releaseDetailPath({
+    projectSlug: projectslug,
+    releaseVersion: row.releaseVersion,
+    detailPage: detailpage,
+  })
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: url,
+    },
+    openGraph: {
+      title,
+      description,
+      url,
+      type: "article",
+      publishedTime: row.publishedAt,
+      section: row.releaseVersion,
+    },
+    twitter: {
+      card: "summary",
+      title,
+      description,
+    },
+  }
+}
+
 export default async function ReleaseDetailPage({
   params,
 }: {
-  params: Promise<{
-    projectslug: string
-    release: string
-    detailpage: string[]
-  }>
+  params: Promise<ReleaseDetailParams>
 }) {
   const { projectslug, release, detailpage } = await params
-  if (
-    !isProjectSlug(projectslug) ||
-    !isReleaseSegment(release) ||
-    detailpage.length === 0 ||
-    !detailpage.every(isDetailPageSegment)
-  ) {
-    notFound()
-  }
+  validateParams({ projectslug, release, detailpage })
 
   const detailPath = detailpage.join("/")
   const row = await getCachedPublicReleaseDetail(
@@ -59,6 +113,21 @@ export default async function ReleaseDetailPage({
       </div>
     </main>
   )
+}
+
+function validateParams({
+  projectslug,
+  release,
+  detailpage,
+}: ReleaseDetailParams) {
+  if (
+    !isProjectSlug(projectslug) ||
+    !isReleaseSegment(release) ||
+    detailpage.length === 0 ||
+    !detailpage.every(isDetailPageSegment)
+  ) {
+    notFound()
+  }
 }
 
 function isReleaseSegment(value: string) {

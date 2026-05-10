@@ -22,15 +22,10 @@ type PublishFile = {
   title: string;
 };
 
-type PublishManifestFile = Omit<PublishFile, "content">;
-
-type CheckResponse = {
-  release?: {
-    contentHash?: string;
-    fileCount?: number;
-  } | null;
-  needsPublish?: unknown;
-  requiredFiles?: unknown;
+type PublishResponse = {
+  release?: unknown;
+  upToDate?: unknown;
+  uploadedFileCount?: unknown;
 };
 
 export async function publish(options: PublishOptions = {}) {
@@ -94,28 +89,9 @@ async function publishRelease(options: {
   const files = await readReleaseMarkdownFiles(gitRoot, release);
   const sourceCommit = await getSourceCommit(gitRoot);
   const contentHash = hashRelease(files);
-  const manifest = files.map(toManifestFile);
 
   info(`found ${formatCount(files.length, "changelog file")} in changelogs/${release}`);
-
-  const check = await checkReleaseFiles({
-    baseUrl,
-    contentHash,
-    manifest,
-    projectId,
-    release,
-    token,
-  });
-
-  if (!check.needsPublish) {
-    success("already up to date");
-    info(`server ${baseUrl}`);
-    return;
-  }
-
-  const required = new Set(check.requiredFiles);
-  const filesToUpload = files.filter((file) => required.has(file.path));
-  info(`uploading ${filesToUpload.length}/${files.length} ${files.length === 1 ? "file" : "files"}`);
+  info(`checking ${formatCount(files.length, "file")} and publishing changes`);
 
   const response = await fetch(
     new URL(
@@ -131,16 +107,15 @@ async function publishRelease(options: {
       body: JSON.stringify({
         sourceCommit,
         contentHash,
-        manifest,
-        files: filesToUpload,
+        files,
         ...(branding ? { branding } : {}),
       }),
     },
   );
 
-  let body: unknown;
+  let body: PublishResponse | null;
   try {
-    body = await response.json();
+    body = (await response.json()) as PublishResponse;
   } catch {
     body = null;
   }
@@ -153,9 +128,18 @@ async function publishRelease(options: {
     throw new Error(`failed to publish ${release}: ${message}`);
   }
 
+  if (body?.upToDate === true) {
+    success("already up to date");
+    info(`server ${baseUrl}`);
+    return;
+  }
+
+  const uploadedFileCount =
+    typeof body?.uploadedFileCount === "number" ? body.uploadedFileCount : files.length;
+
   success(`published ${release}`);
   info(`server ${baseUrl}`);
-  info(`uploaded ${filesToUpload.length}/${files.length} ${files.length === 1 ? "file" : "files"}`);
+  info(`uploaded ${uploadedFileCount}/${files.length} ${files.length === 1 ? "file" : "files"}`);
 }
 
 function formatCount(count: number, singular: string) {
@@ -171,61 +155,6 @@ async function readReleaseNames(gitRoot: string) {
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)
     .sort((a, b) => a.localeCompare(b));
-}
-
-async function checkReleaseFiles(options: {
-  baseUrl: string;
-  contentHash: string;
-  manifest: PublishManifestFile[];
-  projectId: string;
-  release: string;
-  token: string;
-}) {
-  const { baseUrl, contentHash, manifest, projectId, release, token } = options;
-  const response = await fetch(
-    new URL(
-      `/api/projects/${encodeURIComponent(projectId)}/releases/${encodeURIComponent(release)}/check`,
-      baseUrl,
-    ),
-    {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${token}`,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        contentHash,
-        files: manifest.map((file) => ({
-          path: file.path,
-          contentHash: file.contentHash,
-        })),
-      }),
-    },
-  );
-
-  let body: CheckResponse | null;
-  try {
-    body = (await response.json()) as CheckResponse;
-  } catch {
-    body = null;
-  }
-
-  if (!response.ok) {
-    const message =
-      body && typeof body === "object" && "error" in body
-        ? String((body as { error: unknown }).error)
-        : response.statusText;
-    throw new Error(`failed to check ${release}: ${message}`);
-  }
-
-  if (!body || !Array.isArray(body.requiredFiles)) {
-    throw new Error(`failed to check ${release}: invalid server response`);
-  }
-
-  return {
-    needsPublish: body.needsPublish === true,
-    requiredFiles: body.requiredFiles.map(String),
-  };
 }
 
 async function readReleaseMarkdownFiles(gitRoot: string, release: string): Promise<PublishFile[]> {
@@ -344,14 +273,6 @@ function validateFrontmatter(file: PublishFile, release: string) {
   }
 
   return frontmatter.title;
-}
-
-function toManifestFile(file: PublishFile): PublishManifestFile {
-  return {
-    path: file.path,
-    contentHash: file.contentHash,
-    title: file.title,
-  };
 }
 
 function parseFrontmatter(content: string): Record<string, string> | null {

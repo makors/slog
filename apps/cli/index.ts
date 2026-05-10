@@ -21,6 +21,12 @@ ${pc.bold("usage:")}
   slog <command> [options]
   slog <command> --help
 
+${pc.bold("install:")}
+  bun i -g @makors/slog
+
+${pc.bold("without global install:")}
+  bunx @makors/slog <command> [options]
+
 ${pc.bold("options:")}
   -h, --help show this help screen
   -v, --version shows the cli version

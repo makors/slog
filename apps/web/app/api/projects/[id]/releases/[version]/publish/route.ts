@@ -93,6 +93,23 @@ export async function POST(
   if ("error" in brandingResult) return jsonError(brandingResult.error, 400);
   const branding = brandingResult.value;
 
+  if (existing.release?.contentHash === contentHash) {
+    await db
+      .update(projectToken)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(projectToken.id, candidate.tokenId));
+
+    return Response.json({
+      release: {
+        version: releaseVersion,
+        fileCount: existing.files.length,
+        contentHash,
+      },
+      upToDate: true,
+      uploadedFileCount: 0,
+    });
+  }
+
   const now = new Date();
   const published = await db.transaction(async (tx) => {
     const [release] = await tx
@@ -162,6 +179,8 @@ export async function POST(
       fileCount: mergedFiles.value.length,
       contentHash,
     },
+    upToDate: false,
+    uploadedFileCount: uploadedFiles.value.length,
   });
 }
 
