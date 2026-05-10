@@ -1,4 +1,6 @@
-FROM oven/bun:1.3.6
+FROM node:22-bookworm-slim
+
+RUN npm install --global bun@1.3.6
 
 WORKDIR /app
 
@@ -12,4 +14,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["bun", "run", "--cwd", "apps/web", "dev", "--hostname", "0.0.0.0"]
+CMD ["sh", "scripts/docker-web-dev.sh"]

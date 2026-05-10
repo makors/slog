@@ -22,6 +22,20 @@
       "when": 1778360000000,
       "tag": "0002_join_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778381360987,
+      "tag": "0003_messy_wallflower",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778432340238,
+      "tag": "0004_peaceful_hercules",
+      "breakpoints": true
     }
   ]
 }

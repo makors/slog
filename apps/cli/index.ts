@@ -34,6 +34,7 @@ link this repo to slog
 
 ${pc.bold("usage:")}
   slog init <join-code> [--url <url>]
+  slog init --token [project-token] [--url <url>]
   slog init --local [--url <url>]
 
 ${pc.bold("arguments:")}
@@ -42,6 +43,7 @@ ${pc.bold("arguments:")}
 ${pc.bold("options:")}
   -h, --help show this help screen
   --url     your slog instance (self-hosters only; defaults to hosted slog)
+  --token   set up with an existing project token instead of a join code
   --local   create a local-only project and skip API/token setup
 `;
 
@@ -74,9 +76,11 @@ publish local changelogs
 
 ${pc.bold("usage:")}
   slog publish
+  slog publish --release <version>
 
 ${pc.bold("options:")}
   -h, --help show this help screen
+  --release <tag> only publish one changelog release version (ex. v1.0.0)
 
 ${pc.bold("local mode:")}
   projects initialized with slog init --local do not publish anywhere
@@ -97,8 +101,34 @@ function helpTextFor(command: string | undefined) {
 
 function parseCliArgs(args: string[]) {
   if (args[0] === "init") {
+    const initArgs = args.slice(1);
+    const normalizedArgs: string[] = [];
+    let token: string | true | undefined;
+
+    for (let i = 0; i < initArgs.length; i++) {
+      const arg = initArgs[i];
+
+      if (arg === "--token") {
+        const next = initArgs[i + 1];
+        if (next && !next.startsWith("-")) {
+          token = next;
+          i++;
+        } else {
+          token = true;
+        }
+        continue;
+      }
+
+      if (arg.startsWith("--token=")) {
+        token = arg.slice("--token=".length);
+        continue;
+      }
+
+      normalizedArgs.push(arg);
+    }
+
     const parsed = parseArgs({
-      args: args.slice(1),
+      args: normalizedArgs,
       allowPositionals: true,
       options: {
         help: { type: "boolean", short: "h" },
@@ -108,7 +138,7 @@ function parseCliArgs(args: string[]) {
     });
 
     return {
-      values: parsed.values,
+      values: { ...parsed.values, token },
       positionals: ["init", ...parsed.positionals],
     };
   }
@@ -129,6 +159,22 @@ function parseCliArgs(args: string[]) {
     return {
       values: parsed.values,
       positionals: ["gen", ...parsed.positionals],
+    };
+  }
+
+  if (args[0] === "publish") {
+    const parsed = parseArgs({
+      args: args.slice(1),
+      allowPositionals: true,
+      options: {
+        help: { type: "boolean", short: "h" },
+        release: { type: "string" },
+      },
+    });
+
+    return {
+      values: parsed.values,
+      positionals: ["publish", ...parsed.positionals],
     };
   }
 
@@ -165,6 +211,7 @@ async function main() {
       case "init":
         await init(arg, {
           local: flags.local,
+          token: flags.token,
           url: flags.url,
         });
         break;
@@ -177,7 +224,9 @@ async function main() {
         });
         break;
       case "publish":
-        await publish();
+        await publish({
+          release: flags.release,
+        });
         break;
       default:
         throw new Error(`unknown command "${command}", run "slog --help" for usage`);

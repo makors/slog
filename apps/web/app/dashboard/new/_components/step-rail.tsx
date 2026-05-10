@@ -8,7 +8,7 @@ export function StepDot({ state }: { state: PhaseState }) {
   return (
     <span
       className={cn(
-        "size-1.5 shrink-0 rounded-full transition-colors duration-300",
+        "size-2 shrink-0 rounded-full transition-colors duration-300",
         state === "pending" && "bg-border",
         state === "active" && "bg-foreground",
         state === "done" && "bg-emerald-500",

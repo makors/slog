@@ -1,7 +1,7 @@
 import { type ProjectConfig, getConfig, setConfig, setToken } from "../lib/config";
 import { ensureChangelogDir } from "../lib/changelog";
 import { getGitRoot } from "../lib/git";
-import { success } from "../lib/cli";
+import { askSecret, success } from "../lib/cli";
 import { randomUUID } from "node:crypto";
 import { basename } from "node:path";
 import pc from "picocolors";
@@ -12,6 +12,7 @@ const JOIN_CODE_PATTERN = /^[a-z2-9]{3}-[a-z2-9]{3}-[a-z2-9]{3}$/;
 
 export type InitOptions = {
   local?: boolean;
+  token?: string | true;
   url?: string;
 };
 
@@ -27,7 +28,7 @@ export async function init(joinCode?: string, options: InitOptions = {}) {
   if (currentConfig != null) {
     const tokenNote = currentConfig.local
       ? "this is a local project; no token was stored"
-      : `there may be a token in ~/.config/slog/${currentConfig.projectId}`;
+      : `there may be a token in ~/.config/slog/${currentConfig.projectId}, and it might be overwritten`;
     throw new Error(
 `already linked to a project, delete .slog.json and re-run
 (note: ${tokenNote})`
@@ -37,14 +38,24 @@ export async function init(joinCode?: string, options: InitOptions = {}) {
   const projectName = basename(gitRoot);
   const exchange = options.local
     ? null
-    : await exchangeJoinCode(requireJoinCode(joinCode, baseUrl), {
+    : await resolveTokenExchange(joinCode, {
         baseUrl,
         projectName,
+        tokenSetup: options.token,
       });
 
   const config: ProjectConfig = options.local
-    ? { projectId: `local-${randomUUID()}`, baseUrl, local: true }
-    : { projectId: exchange!.projectId, baseUrl };
+    ? {
+        projectId: `local-${randomUUID()}`,
+        baseUrl,
+        local: true,
+        branding: { displayName: "" },
+      }
+    : {
+        projectId: exchange!.projectId,
+        baseUrl,
+        branding: { displayName: "" },
+      };
   await setConfig(config, gitRoot);
 
   success("wrote config to .slog.json at project root");
@@ -82,14 +93,20 @@ function requireJoinCode(joinCode: string | undefined, baseUrl: string) {
 visit ${baseUrl}/dashboard/new to create a project, then run:
   slog init <join-code> --url ${baseUrl}
 
+if you already have a project token, run:
+  slog init --token --url ${baseUrl}
+
 to skip API setup for now, run: slog init --local`);
   }
 
   if (TOKEN_PATTERN.test(code)) {
     throw new Error(`project tokens cannot be passed to init anymore
 
-visit ${baseUrl}/dashboard/new to create a one-time join code, then run:
-  slog init <join-code> --url ${baseUrl}`);
+join codes are the default setup path:
+  slog init <join-code> --url ${baseUrl}
+
+if you already have a project token, run:
+  slog init --token ${code} --url ${baseUrl}`);
   }
 
   if (!JOIN_CODE_PATTERN.test(code)) {
@@ -99,6 +116,31 @@ expected a code like abc-def-234 from ${baseUrl}/dashboard/new`);
   }
 
   return code;
+}
+
+async function resolveTokenExchange(
+  joinCode: string | undefined,
+  {
+    baseUrl,
+    projectName,
+    tokenSetup,
+  }: {
+    baseUrl: string;
+    projectName: string;
+    tokenSetup?: string | true;
+  },
+) {
+  if (joinCode || !tokenSetup) {
+    return await exchangeJoinCode(requireJoinCode(joinCode, baseUrl), {
+      baseUrl,
+      projectName,
+    });
+  }
+
+  const token =
+    typeof tokenSetup === "string" ? tokenSetup : await askSecret("Project token");
+
+  return await setupWithToken(requireProjectToken(token, baseUrl), { baseUrl });
 }
 
 async function exchangeJoinCode(
@@ -141,6 +183,44 @@ async function exchangeJoinCode(
   return body;
 }
 
+async function setupWithToken(
+  token: string,
+  {
+    baseUrl,
+  }: {
+    baseUrl: string;
+  },
+): Promise<TokenExchange> {
+  const response = await fetch(new URL("/api/token/setup", baseUrl), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ token }),
+  });
+
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch {
+    body = null;
+  }
+
+  if (!response.ok) {
+    const message =
+      body && typeof body === "object" && "error" in body
+        ? String((body as { error: unknown }).error)
+        : response.statusText;
+    throw new Error(`failed to set up token: ${message}`);
+  }
+
+  if (!isTokenSetup(body)) {
+    throw new Error("failed to set up token: invalid response from server");
+  }
+
+  return { ...body, token };
+}
+
 function isTokenExchange(value: unknown): value is TokenExchange {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const exchange = value as Record<string, unknown>;
@@ -152,6 +232,38 @@ function isTokenExchange(value: unknown): value is TokenExchange {
     typeof exchange.token === "string" &&
     TOKEN_PATTERN.test(exchange.token)
   );
+}
+
+function isTokenSetup(value: unknown): value is Omit<TokenExchange, "token"> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const exchange = value as Record<string, unknown>;
+  return (
+    typeof exchange.projectId === "string" &&
+    exchange.projectId.length > 0 &&
+    typeof exchange.projectName === "string" &&
+    exchange.projectName.length > 0
+  );
+}
+
+function requireProjectToken(token: string, baseUrl: string) {
+  const value = token.trim();
+  if (!value) {
+    throw new Error(`missing project token
+
+join codes are the default setup path:
+  slog init <join-code> --url ${baseUrl}
+
+if you already have a project token, run:
+  slog init --token <project-token> --url ${baseUrl}`);
+  }
+
+  if (!TOKEN_PATTERN.test(value)) {
+    throw new Error(`invalid project token
+
+expected a token like slog_ followed by 32 lowercase letters or numbers`);
+  }
+
+  return value;
 }
 
 function normalizeBaseUrl(url: string) {

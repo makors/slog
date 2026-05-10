@@ -1,11 +1,8 @@
 "use client";
 
 import { DropdownMenu } from "radix-ui";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 
 import { Kbd } from "@/components/ui/kbd";
-import { authClient } from "@/lib/auth-client";
 import { cn } from "@/lib/utils";
 
 interface UserMenuProps {
@@ -17,22 +14,10 @@ interface UserMenuProps {
 }
 
 export function UserMenu({ user }: UserMenuProps) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
   const initial = user.name?.trim()?.charAt(0) || user.email.charAt(0);
 
   const handleSignOut = () => {
-    startTransition(async () => {
-      await authClient.signOut({
-        fetchOptions: {
-          onSuccess: () => {
-            router.push("/");
-            router.refresh(); // clears "weird" state from better auth
-          },
-        },
-      });
-    });
+    window.location.assign("/logout");
   };
 
   return (
@@ -92,11 +77,7 @@ export function UserMenu({ user }: UserMenuProps) {
 
           <div className="p-1">
             <DropdownMenu.Item
-              disabled={isPending}
-              onSelect={(event) => {
-                event.preventDefault();
-                handleSignOut();
-              }}
+              asChild
               className={cn(
                 "flex w-full cursor-pointer items-center justify-between rounded-sm px-2.5 py-1.5",
                 "text-[13px] text-foreground outline-none select-none",
@@ -104,8 +85,10 @@ export function UserMenu({ user }: UserMenuProps) {
                 "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
               )}
             >
-              <span>Sign out</span>
-              <Kbd>{isPending ? "…" : "s"}</Kbd>
+              <a href="/logout">
+                <span>Sign out</span>
+                <Kbd>s</Kbd>
+              </a>
             </DropdownMenu.Item>
           </div>
         </DropdownMenu.Content>

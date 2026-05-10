@@ -1,13 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
-import { cn } from "@/lib/utils";
 
-const SHORTCUT_KEY = "c";
+const SHORTCUT_KEY = "n";
 const TARGET_HREF = "/dashboard/new";
 
 function isTypingTarget(target: EventTarget | null) {
@@ -64,17 +63,15 @@ export function CreateProjectButton() {
       <Link
         ref={linkRef}
         href={TARGET_HREF}
-        aria-keyshortcuts="C"
+        aria-keyshortcuts="N"
       >
         <span>Create project</span>
         <Kbd
           aria-hidden
           variant="outline"
-          className={
-            "uppercase transition-colors duration-150 group-hover/cp:bg-background"
-          }
+          className="uppercase transition-colors duration-150 group-hover/cp:bg-background"
         >
-          C
+          N
         </Kbd>
       </Link>
     </Button>

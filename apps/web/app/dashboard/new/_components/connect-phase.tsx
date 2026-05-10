@@ -1,18 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 
 import { Check } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/ui/kbd";
+import { useCopy } from "@/hooks/use-copy";
 import { cn } from "@/lib/utils";
 
 import { WaitingDots } from "./waiting-dots";
 
 const PLACEHOLDER = "···-···-···";
 const CLI_RUNNER = "bunx @makors/slog";
+const subscribeToOrigin = () => () => {};
+const getOriginSnapshot = () => window.location.origin;
+const getServerOriginSnapshot = () => "";
 
 function isTypingTarget(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
@@ -28,45 +32,20 @@ export function ConnectPhase({
   code: string | null;
   onConnected: (info: { projectId: string }) => void;
 }) {
-  const [copied, setCopied] = useState(false);
-  const [origin, setOrigin] = useState("");
+  const origin = useSyncExternalStore(
+    subscribeToOrigin,
+    getOriginSnapshot,
+    getServerOriginSnapshot,
+  );
   const [expired, setExpired] = useState(false);
-  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { copied, copy: copyValue } = useCopy();
   const display = code ?? PLACEHOLDER;
   const command = `${CLI_RUNNER} init ${display}${origin ? ` \\\n  --url ${origin}` : ""}`;
 
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-    };
-  }, []);
-
-  const showCopied = useCallback(() => {
-    setCopied(true);
-    copiedTimerRef.current = setTimeout(() => {
-      setCopied(false);
-      copiedTimerRef.current = null;
-    }, 1400);
-  }, []);
-
   const copy = useCallback(() => {
     if (!code) return;
-    if (copiedTimerRef.current) clearTimeout(copiedTimerRef.current);
-
-    if (copyTextSync(command)) {
-      showCopied();
-      return;
-    }
-
-    void copyTextAsync(command).then((ok) => {
-      if (ok) showCopied();
-      else setCopied(false);
-    });
-  }, [code, command, showCopied]);
+    copyValue(command);
+  }, [code, command, copyValue]);
 
   // `c` copies the command (when not typing into an input).
   useEffect(() => {
@@ -114,12 +93,12 @@ export function ConnectPhase({
   }, [code, onConnected]);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <CommandBlock display={display} loading={!code} origin={origin} />
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-3">
         {!expired && <WaitingDots />}
-        <span className="text-[13px] text-muted-foreground">
+        <span className="text-sm text-muted-foreground">
           {expired
             ? "Join code expired. Refresh to create a new one."
             : "Waiting for the CLI…"}
@@ -130,10 +109,10 @@ export function ConnectPhase({
           onClick={copy}
           disabled={!code}
           aria-keyshortcuts="C"
-          className="group/cp ml-auto gap-2.5 pr-2.5 text-[13px] tracking-tight"
+          className="group/cp ml-auto gap-3 pr-3 text-sm tracking-tight"
         >
           <span>Copy</span>
-          <span className="relative flex size-[18px] items-center justify-center">
+          <span className="relative flex size-5 items-center justify-center">
             <Kbd
               aria-hidden
               variant="outline"
@@ -147,7 +126,7 @@ export function ConnectPhase({
             <Check
               aria-hidden
               className={cn(
-                "absolute size-3 transition-all duration-200",
+                "absolute size-3.5 transition-all duration-200",
                 copied ? "opacity-100 scale-100" : "opacity-0 scale-75",
               )}
             />
@@ -157,49 +136,6 @@ export function ConnectPhase({
       </div>
     </div>
   );
-}
-
-function copyTextSync(value: string) {
-  if (typeof document === "undefined") return false;
-
-  const textarea = document.createElement("textarea");
-  textarea.value = value;
-  textarea.setAttribute("readonly", "");
-  textarea.style.position = "fixed";
-  textarea.style.left = "0";
-  textarea.style.top = "0";
-  textarea.style.width = "1px";
-  textarea.style.height = "1px";
-  textarea.style.padding = "0";
-  textarea.style.border = "0";
-  textarea.style.opacity = "0.001";
-  textarea.style.pointerEvents = "none";
-  document.body.appendChild(textarea);
-
-  const previouslyFocused = document.activeElement as HTMLElement | null;
-  textarea.focus();
-  textarea.select();
-  textarea.setSelectionRange(0, value.length);
-
-  try {
-    return document.execCommand("copy");
-  } catch {
-    return false;
-  } finally {
-    document.body.removeChild(textarea);
-    previouslyFocused?.focus?.();
-  }
-}
-
-async function copyTextAsync(value: string) {
-  if (!navigator.clipboard?.writeText) return false;
-
-  try {
-    await navigator.clipboard.writeText(value);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 function CommandBlock({
@@ -215,7 +151,7 @@ function CommandBlock({
     <pre
       className={cn(
         "w-full whitespace-pre rounded-lg border border-border bg-muted/40",
-        "px-3.5 py-3 font-mono text-[13px] leading-relaxed tracking-tight",
+        "px-4 py-3.5 font-mono text-sm leading-relaxed tracking-tight",
         "transition-opacity duration-300",
         loading && "opacity-50",
       )}

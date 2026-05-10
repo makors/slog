@@ -78,6 +78,7 @@ export const project = pgTable(
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
+    displayName: text("display_name"),
     ownerUserId: text("owner_user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
@@ -140,6 +141,53 @@ export const projectJoinCode = pgTable(
   ],
 );
 
+export const projectRelease = pgTable(
+  "project_release",
+  {
+    id: text("id").primaryKey(),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => project.id, { onDelete: "cascade" }),
+    version: text("version").notNull(),
+    title: text("title").notNull(),
+    sourceCommit: text("source_commit"),
+    contentHash: text("content_hash").notNull(),
+    publishedAt: timestamp("published_at").defaultNow().notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("projectRelease_projectId_idx").on(table.projectId),
+    uniqueIndex("projectRelease_projectId_version_idx").on(table.projectId, table.version),
+  ],
+);
+
+export const projectReleaseFile = pgTable(
+  "project_release_file",
+  {
+    id: text("id").primaryKey(),
+    releaseId: text("release_id")
+      .notNull()
+      .references(() => projectRelease.id, { onDelete: "cascade" }),
+    path: text("path").notNull(),
+    title: text("title").notNull(),
+    contentMarkdown: text("content_markdown").notNull(),
+    contentHash: text("content_hash").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("projectReleaseFile_releaseId_idx").on(table.releaseId),
+    uniqueIndex("projectReleaseFile_releaseId_path_idx").on(table.releaseId, table.path),
+  ],
+);
+
 export const userRelations = relations(user, ({ many }) => ({
   sessions: many(session),
   accounts: many(account),
@@ -168,6 +216,7 @@ export const projectRelations = relations(project, ({ one, many }) => ({
   }),
   tokens: many(projectToken),
   joinCodes: many(projectJoinCode),
+  releases: many(projectRelease),
 }));
 
 export const projectTokenRelations = relations(projectToken, ({ one }) => ({
@@ -185,5 +234,20 @@ export const projectJoinCodeRelations = relations(projectJoinCode, ({ one }) => 
   claimedProject: one(project, {
     fields: [projectJoinCode.claimedProjectId],
     references: [project.id],
+  }),
+}));
+
+export const projectReleaseRelations = relations(projectRelease, ({ one, many }) => ({
+  project: one(project, {
+    fields: [projectRelease.projectId],
+    references: [project.id],
+  }),
+  files: many(projectReleaseFile),
+}));
+
+export const projectReleaseFileRelations = relations(projectReleaseFile, ({ one }) => ({
+  release: one(projectRelease, {
+    fields: [projectReleaseFile.releaseId],
+    references: [projectRelease.id],
   }),
 }));

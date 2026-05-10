@@ -12,11 +12,18 @@ const LLM_CONFIG_PATH = join(CREDENTIALS_DIR, "llm.json");
 
 export const LLM_CONFIG_LOCATION = LLM_CONFIG_PATH;
 
+export type ProjectBranding = {
+  displayName?: string;
+};
+
 export type ProjectConfig = {
   projectId: string;
   baseUrl: string;
   local?: boolean;
+  branding?: ProjectBranding;
 };
+
+const MAX_DISPLAY_NAME_LENGTH = 60;
 
 export type LlmConfig = {
   apiKey: string;
@@ -54,6 +61,20 @@ export async function getConfig(root?: string): Promise<ProjectConfig | null> {
   return await file.json();
 }
 
+function isProjectBranding(value: unknown): value is ProjectBranding {
+  if (value === undefined) return true;
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+
+  const branding = value as Record<string, unknown>;
+
+  if (branding.displayName !== undefined) {
+    if (typeof branding.displayName !== "string") return false;
+    if (branding.displayName.length > MAX_DISPLAY_NAME_LENGTH) return false;
+  }
+
+  return true;
+}
+
 function isProjectConfig(value: unknown): value is ProjectConfig {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 
@@ -61,7 +82,8 @@ function isProjectConfig(value: unknown): value is ProjectConfig {
   return (
     isNonEmptyString(config.projectId) &&
     isNonEmptyString(config.baseUrl) &&
-    (config.local === undefined || typeof config.local === "boolean")
+    (config.local === undefined || typeof config.local === "boolean") &&
+    isProjectBranding(config.branding)
   );
 }
 

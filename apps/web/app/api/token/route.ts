@@ -6,6 +6,8 @@ import { NextRequest } from "next/server";
 import { project, projectJoinCode, projectToken } from "@/db/schema";
 import { db } from "@/lib/db";
 import { publishJoinCodeClaimed } from "@/lib/join-code-events";
+import { createUniqueProjectSlug } from "@/lib/project-slug";
+import { revalidatePublicChangelogProject } from "@/lib/public-changelog-cache";
 
 const JOIN_CODE_PATTERN = /^[a-z2-9]{3}-[a-z2-9]{3}-[a-z2-9]{3}$/;
 const TOKEN_PREFIX = "slog_";
@@ -37,6 +39,8 @@ export async function POST(request: NextRequest) {
       return jsonError("Join code is invalid, expired, or already used", 404);
     }
 
+    revalidatePublicChangelogProject(result.projectId);
+
     publishJoinCodeClaimed(joinCode, {
       project: {
         id: result.projectId,
@@ -66,7 +70,15 @@ async function redeemJoinCode(joinCode: string, projectName: string) {
 
     if (!join) return null;
 
-    const projectId = randomId();
+    const projectId = await createUniqueProjectSlug(projectName, async (slug) => {
+      const [existing] = await tx
+        .select({ id: project.id })
+        .from(project)
+        .where(eq(project.id, slug))
+        .limit(1);
+
+      return Boolean(existing);
+    });
     const token = mintToken();
     const salt = randomBytes(16).toString("hex");
 

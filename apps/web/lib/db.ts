@@ -1,5 +1,5 @@
-import { drizzle } from 'drizzle-orm/bun-sql';
-import { SQL } from 'bun';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import pg from 'pg';
 import * as schema from '@/db/schema';
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -9,22 +9,25 @@ if (!databaseUrl) {
 }
 
 const poolMax = Number(process.env.DATABASE_POOL_MAX ?? 5);
+const { Pool } = pg;
+
+type PgPool = InstanceType<typeof Pool>;
 
 declare global {
-  var __slogSql: SQL | undefined;
+  var __slogPgPool: PgPool | undefined;
 }
 
-const client =
-  globalThis.__slogSql ??
-  new SQL({
-    url: databaseUrl,
+const pool =
+  globalThis.__slogPgPool ??
+  new Pool({
+    connectionString: databaseUrl,
     max: poolMax,
-    idleTimeout: 30,
-    connectionTimeout: 10,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
   });
 
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.__slogSql = client;
+  globalThis.__slogPgPool = pool;
 }
 
-export const db = drizzle({ client, schema });
+export const db = drizzle(pool, { schema });

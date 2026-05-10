@@ -77,10 +77,10 @@ export function NewProjectStepper() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-1 flex-col px-6 pt-5 pb-8">
+    <div className="mx-auto flex w-full max-w-xl flex-1 flex-col px-6 pt-6 pb-10">
       <BackLink />
 
-      <div className="mt-6 flex w-full flex-col gap-9">
+      <div className="mt-7 flex w-full flex-col gap-10">
         <Header />
 
         <ol className="flex flex-col">
@@ -91,7 +91,7 @@ export function NewProjectStepper() {
             const state = isLast && rawState === "done" ? "complete" : rawState;
 
             return (
-              <li key={phase.id} className="flex gap-4">
+              <li key={phase.id} className="flex gap-5">
                 <div className="flex flex-col items-center pt-[7px]">
                   <StepDot state={state} />
                   {!isLast && <StepConnector state={state} />}
@@ -99,25 +99,25 @@ export function NewProjectStepper() {
 
                 <div
                   className={cn(
-                    "flex min-w-0 flex-1 flex-col gap-3",
-                    isLast ? "pb-0" : "pb-7",
+                    "flex min-w-0 flex-1 flex-col gap-4",
+                    isLast ? "pb-0" : "pb-8",
                   )}
                 >
-                  <div className="flex min-h-[1.25rem] flex-col gap-0.5 pt-px">
+                  <div className="flex min-h-5 flex-col gap-1 pt-px">
                     {state === "complete" && siteUrl ? (
                       <a
-                        href={`https://${siteUrl}`}
+                        href={siteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex w-fit items-center gap-1 text-[15px] font-medium leading-tight tracking-tight text-foreground underline-offset-4 hover:underline"
+                        className="inline-flex w-fit items-center gap-1.5 text-base font-medium leading-tight tracking-tight text-foreground underline-offset-4 hover:underline"
                       >
-                        <span>Deployed to https://{siteUrl}</span>
-                        <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" />
+                        <span>Published to {siteUrl}</span>
+                        <ArrowUpRight className="size-4 shrink-0 text-muted-foreground" />
                       </a>
                     ) : (
                       <span
                         className={cn(
-                          "text-[15px] font-medium leading-tight tracking-tight transition-colors duration-200",
+                          "text-base font-medium leading-tight tracking-tight transition-colors duration-200",
                           state === "pending" && "text-muted-foreground/55",
                           state === "active" && "text-foreground",
                           state === "done" && "text-muted-foreground",
@@ -129,7 +129,7 @@ export function NewProjectStepper() {
                       </span>
                     )}
                     {state === "active" && (
-                      <span className="text-[13px] leading-relaxed text-muted-foreground/80">
+                      <span className="text-sm leading-relaxed text-muted-foreground/80">
                         {phase.hint}
                       </span>
                     )}
@@ -176,12 +176,12 @@ function BackLink() {
       href="/dashboard"
       className={cn(
         "inline-flex w-fit items-center gap-1.5 -ml-1 px-1 py-1 rounded",
-        "text-[13px] text-muted-foreground/70 transition-colors",
+        "text-sm text-muted-foreground/70 transition-colors",
         "hover:text-foreground focus-visible:text-foreground",
         "focus-visible:outline-none",
       )}
     >
-      <ArrowLeft aria-hidden className="size-3.5" />
+      <ArrowLeft aria-hidden className="size-4" />
       <span>Dashboard</span>
     </Link>
   );
@@ -189,8 +189,8 @@ function BackLink() {
 
 function Header() {
   return (
-    <div className="flex flex-col items-start gap-1.5">
-      <h1 className="text-[17px] font-medium tracking-tight">
+    <div className="flex flex-col items-start gap-2">
+      <h1 className="text-lg font-medium tracking-tight">
         Create a project
       </h1>
     </div>
@@ -231,7 +231,7 @@ function Footer({
         ref={doneRef}
         variant="outline"
         onClick={onDone}
-        className="animate-in fade-in slide-in-from-bottom-1 w-full gap-2.5 pr-2.5 tracking-tight duration-200"
+        className="animate-in fade-in slide-in-from-bottom-1 w-full gap-3 pr-3 tracking-tight duration-200"
       >
         <span>Done</span>
         <Kbd
@@ -254,8 +254,8 @@ function Failure({
   onBack: () => void;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-4 px-6 py-20">
-      <p className="text-[13px] text-destructive">{message}</p>
+    <div className="mx-auto flex w-full max-w-xl flex-col gap-4 px-6 py-20">
+      <p className="text-sm text-destructive">{message}</p>
       <Button variant="outline" size="sm" onClick={onBack}>
         Back to dashboard
       </Button>

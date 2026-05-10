@@ -11,7 +11,7 @@ export function DoneSummary({
 }) {
   if (id === "connect") {
     return (
-      <span className="text-[13px] text-muted-foreground/80">
+      <span className="text-sm text-muted-foreground/80">
         Connected
       </span>
     );
@@ -20,10 +20,10 @@ export function DoneSummary({
   if (id === "deploy" && siteUrl) {
     return (
       <a
-        href={`https://${siteUrl}`}
+        href={siteUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex w-fit items-center gap-1.5 font-mono text-[13px] tracking-tight text-foreground/85 underline-offset-4 hover:underline"
+        className="inline-flex w-fit items-center gap-1.5 font-mono text-sm tracking-tight text-foreground/85 underline-offset-4 hover:underline"
       >
         {siteUrl}
       </a>

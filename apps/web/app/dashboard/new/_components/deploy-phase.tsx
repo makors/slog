@@ -2,6 +2,8 @@
 
 import { useEffect } from "react";
 
+import { projectPublicUrl } from "@/lib/public-url";
+
 import { WaitingDots } from "./waiting-dots";
 
 export const STUB_DEPLOY_MS = 2000;
@@ -19,29 +21,27 @@ export function DeployPhase({
   // status stream (SSE or polling) keyed off `projectId`.
   useEffect(() => {
     if (siteUrl) return;
-    const slug =
-      (projectId ?? "preview").replace(/[^a-z0-9]/gi, "").slice(0, 8) ||
-      "preview";
     const t = setTimeout(() => {
-      onDeployed(`${slug.toLowerCase()}.slog.sh`);
+      onDeployed(projectPublicUrl(projectId ?? "preview"));
     }, STUB_DEPLOY_MS);
     return () => clearTimeout(t);
   }, [projectId, siteUrl, onDeployed]);
 
+  // i.e. has the site been deployed?
   if (siteUrl) {
     return (
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-2">
 
-        <p className="text-[13px] leading-relaxed text-muted-foreground">
+        <p className="text-sm leading-relaxed text-muted-foreground">
           As you ship, run{" "}
-          <code className="rounded bg-muted px-1 py-0.5 font-mono text-[12px] text-foreground/80">
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/80">
             slog gen
           </code>{" "}
           to incrementally generate changelogs with AI (bring-your-own-key).
         </p>
-        <p className="text-[13px] leading-relaxed text-muted-foreground">
-          When you're ready to publish, run{" "}
-          <code className="rounded bg-muted px-1 py-0.5 font-mono text-[12px] text-foreground/80">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          When ready to publish, run{" "}
+          <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-foreground/80">
             slog publish
           </code>{" "}.
         </p>
@@ -50,9 +50,9 @@ export function DeployPhase({
   }
 
   return (
-    <div className="flex items-center gap-2.5">
+    <div className="flex items-center gap-3">
       <WaitingDots />
-      <span className="text-[12px] text-muted-foreground">
+      <span className="text-sm text-muted-foreground">
         Publishing your site…
       </span>
     </div>

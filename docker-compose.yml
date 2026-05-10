@@ -26,20 +26,18 @@ services:
     environment:
       DATABASE_URL: ${DOCKER_DATABASE_URL:-postgres://slog:slog@db:5432/slog}
       NEXT_TELEMETRY_DISABLED: "1"
+      SLOG_DB_PUSH_ON_START: "1"
+      SLOG_NEXT_DEV_BUNDLER: ${SLOG_NEXT_DEV_BUNDLER:-turbopack}
+      SLOG_NEXT_RUNTIME: ${SLOG_NEXT_RUNTIME:-node}
     ports:
       - "3000:3000"
     volumes:
       - .:/app
       - root_node_modules:/app/node_modules
-      - web_next:/app/apps/web/.next
-    command:
-      [
-        "sh",
-        "-lc",
-        "bun install --frozen-lockfile && bun run --cwd apps/web db:push && bun run --cwd apps/web dev --hostname 0.0.0.0",
-      ]
+    tmpfs:
+      - /app/apps/web/.next
+    command: ["sh", "scripts/docker-web-dev.sh"]
 
 volumes:
   postgres_data:
   root_node_modules:
-  web_next:
