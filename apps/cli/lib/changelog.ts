@@ -1,7 +1,8 @@
 import { join } from "node:path";
-import { mkdir, stat } from "node:fs/promises";
+import { mkdir, stat, writeFile } from "node:fs/promises";
 
 const CHANGELOG_DIR = "changelogs";
+const GITKEEP_FILE = ".gitkeep";
 
 export function changelogDir(gitRoot: string): string {
   return join(gitRoot, CHANGELOG_DIR);
@@ -19,6 +20,7 @@ export async function ensureChangelogDir(gitRoot: string): Promise<{ path: strin
     .catch(() => false);
 
   await mkdir(path, { recursive: true });
+  await writeFile(join(path, GITKEEP_FILE), "", { flag: "a" });
   return { path, created: !existed };
 }
 

@@ -15,6 +15,7 @@ export const LLM_CONFIG_LOCATION = LLM_CONFIG_PATH;
 export type ProjectConfig = {
   projectId: string;
   baseUrl: string;
+  local?: boolean;
 };
 
 export type LlmConfig = {
@@ -57,7 +58,11 @@ function isProjectConfig(value: unknown): value is ProjectConfig {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 
   const config = value as Record<string, unknown>;
-  return isNonEmptyString(config.projectId) && isNonEmptyString(config.baseUrl);
+  return (
+    isNonEmptyString(config.projectId) &&
+    isNonEmptyString(config.baseUrl) &&
+    (config.local === undefined || typeof config.local === "boolean")
+  );
 }
 
 export async function requireConfig(root?: string): Promise<ProjectConfig> {

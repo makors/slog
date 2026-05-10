@@ -33,16 +33,16 @@ const INIT_HELP_TEXT = `${pc.bold("slog init")} 🪵
 link this repo to slog
 
 ${pc.bold("usage:")}
-  slog init [url]
+  slog init <join-code> [--url <url>]
+  slog init --local [--url <url>]
 
 ${pc.bold("arguments:")}
-  url        your slog instance (self-hosters only; defaults to hosted slog)
+  join-code  one-time code from your slog dashboard
 
 ${pc.bold("options:")}
   -h, --help show this help screen
-
-${pc.bold("environment variables:")}
-  SLOG_TOKEN - your project token (overrides ~/.config/slog/{projectId})
+  --url     your slog instance (self-hosters only; defaults to hosted slog)
+  --local   create a local-only project and skip API/token setup
 `;
 
 const GEN_HELP_TEXT = `${pc.bold("slog gen")} 🪵
@@ -78,6 +78,9 @@ ${pc.bold("usage:")}
 ${pc.bold("options:")}
   -h, --help show this help screen
 
+${pc.bold("local mode:")}
+  projects initialized with slog init --local do not publish anywhere
+
 ${pc.bold("environment variables:")}
   SLOG_TOKEN - your project token (overrides ~/.config/slog/{projectId})
 `;
@@ -93,6 +96,23 @@ function helpTextFor(command: string | undefined) {
 }
 
 function parseCliArgs(args: string[]) {
+  if (args[0] === "init") {
+    const parsed = parseArgs({
+      args: args.slice(1),
+      allowPositionals: true,
+      options: {
+        help: { type: "boolean", short: "h" },
+        local: { type: "boolean" },
+        url: { type: "string" },
+      },
+    });
+
+    return {
+      values: parsed.values,
+      positionals: ["init", ...parsed.positionals],
+    };
+  }
+
   if (args[0] === "gen") {
     const parsed = parseArgs({
       args: args.slice(1),
@@ -143,7 +163,10 @@ async function main() {
 
     switch (command) {
       case "init":
-        await init(arg);
+        await init(arg, {
+          local: flags.local,
+          url: flags.url,
+        });
         break;
       case "gen":
         await gen(arg, {

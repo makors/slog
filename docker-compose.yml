@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:17-alpine
+    image: postgres:17
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-slog}
@@ -32,7 +32,12 @@ services:
       - .:/app
       - root_node_modules:/app/node_modules
       - web_next:/app/apps/web/.next
-    command: ["bun", "run", "--cwd", "apps/web", "dev", "--hostname", "0.0.0.0"]
+    command:
+      [
+        "sh",
+        "-lc",
+        "bun install --frozen-lockfile && bun run --cwd apps/web db:push && bun run --cwd apps/web dev --hostname 0.0.0.0",
+      ]
 
 volumes:
   postgres_data:

@@ -34,6 +34,7 @@ if you want to add more detail, you can add other markdown files and link to the
 while you're shipping, use the gen command to create a draft changelog from local git history:
 
 ```sh
+slog init --local # local-only setup while the hosted API is not wired up yet
 slog gen 6e0c85..f12a3b --release v1.2.0 # add to log on monday
 slog gen e23fab --release v1.2.0 # append one commit on wednesday
 slog gen --release v1.2.0 # append all commits since last release
