@@ -117,8 +117,8 @@ slog tokens (`slog_...`) are stored in `~/.config/slog/[project-id]` w/ proper p
 > this setup is **not intended for production**. the dockerfile and compose config are development-oriented and will need to be edited accordingly for production hardening (secrets management, no volume mounts, open ports, etc.)
 
 1. clone the repo and make sure [bun](https://bun.sh) and [docker](https://docs.docker.com/get-docker/) are installed
-2. copy [`apps/web/.env.example`](apps/web/.env.example) to `apps/web/.env.local` and fill it out — you'll need a github oauth app (callback: `http://localhost:3000/api/auth/callback/github`) and a strong auth secret. set `NEXT_PUBLIC_URL` to the public-facing url if it differs from `BETTER_AUTH_URL`
-3. copy the `POSTGRES_*` vars and `DOCKER_DATABASE_URL` from that same `.env.example` to a `.env` file in the **root** of the repo (next to `docker-compose.yml`) - compose reads them from there
+2. copy [`apps/web/.env.example`](apps/web/.env.example) to `apps/web/.env` and fill it out — you'll need a github oauth app (callback: `http://localhost:3000/api/auth/callback/github`) and a strong auth secret.
+3. copy the `POSTGRES_*` vars and `DOCKER_DATABASE_URL` from `.env.example` to the same `.env` file
 4. run `docker compose up` from the root - this starts postgres and the next.js dev server. the app will push the db schema automatically on first start
 5. visit `http://localhost:3000` and sign in!
 
