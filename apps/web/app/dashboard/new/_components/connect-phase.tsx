@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { WaitingDots } from "./waiting-dots";
 
 const PLACEHOLDER = "···-···-···";
-const CLI_RUNNER = "bunx @makors/slog";
+const CLI_RUNNER = "bunx @slog-it/slog";
 const subscribeToOrigin = () => () => {};
 const getOriginSnapshot = () => window.location.origin;
 const getServerOriginSnapshot = () => "";

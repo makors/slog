@@ -1,7 +1,8 @@
 {
-  "name": "web",
+  "name": "@slog-it/slog-web",
   "version": "0.0.1",
   "type": "module",
+  "packageManager": "bun@1.3.6",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",

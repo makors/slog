@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import type { NextRequest } from "next/server";
 
+const FORCE_GITHUB_LOGIN_COOKIE = "slog_force_github_login";
+
 export async function GET(request: NextRequest) {
   const callbackURL = getCallbackURL(request);
 
@@ -26,8 +28,22 @@ export async function GET(request: NextRequest) {
     return new Response("Failed to start sign-in", { status: 500 });
   }
 
+  const shouldForceGithubLogin = request.cookies.has(FORCE_GITHUB_LOGIN_COOKIE);
+  const redirectURL = new URL(url, request.nextUrl.origin);
+
+  if (shouldForceGithubLogin) {
+    redirectURL.searchParams.set("prompt", "login");
+  }
+
   const headers = new Headers(response.headers);
-  headers.set("Location", url);
+  headers.set("Location", redirectURL.toString());
+
+  if (shouldForceGithubLogin) {
+    headers.append(
+      "Set-Cookie",
+      `${FORCE_GITHUB_LOGIN_COOKIE}=; Path=/; Max-Age=0; HttpOnly; SameSite=Lax`,
+    );
+  }
 
   return new Response(null, { status: 302, headers });
 }

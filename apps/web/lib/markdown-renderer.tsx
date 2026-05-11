@@ -90,11 +90,13 @@ export async function MarkdownContent({
   projectSlug,
   releaseVersion,
 }: MarkdownContentProps) {
-  return MarkdownAsync({
-    children: stripFrontmatter(markdown),
-    components: createMarkdownComponents({ projectSlug, releaseVersion }),
-    remarkPlugins,
-  })
+  return (
+    <MarkdownAsync
+      children={stripFrontmatter(markdown)}
+      components={createMarkdownComponents({ projectSlug, releaseVersion })}
+      remarkPlugins={remarkPlugins}
+    />
+  );
 }
 
 function createMarkdownComponents(options: RenderMarkdownOptions): Components {

@@ -71,7 +71,6 @@ export function getCachedPublicChangelog(projectSlug: string) {
         .select({
           id: projectRelease.id,
           version: projectRelease.version,
-          title: projectRelease.title,
           publishedAt: projectRelease.publishedAt,
           contentMarkdown: projectReleaseFile.contentMarkdown,
         })
@@ -91,7 +90,7 @@ export function getCachedPublicChangelog(projectSlug: string) {
       return releaseFiles.map((release) => ({
         id: release.id,
         version: release.version,
-        title: release.title,
+        title: release.version,
         publishedAt: release.publishedAt.toISOString(),
         markdown: release.contentMarkdown,
       }))
@@ -119,7 +118,6 @@ export function getCachedPublicLlmsIndexes(projectSlug: string) {
         .select({
           id: projectRelease.id,
           version: projectRelease.version,
-          title: projectRelease.title,
           publishedAt: projectRelease.publishedAt,
           contentMarkdown: projectReleaseFile.contentMarkdown,
         })
@@ -140,7 +138,7 @@ export function getCachedPublicLlmsIndexes(projectSlug: string) {
       return releaseFiles.map((release) => ({
         id: release.id,
         version: release.version,
-        title: release.title,
+        title: release.version,
         publishedAt: release.publishedAt.toISOString(),
         markdown: release.contentMarkdown,
       }))
@@ -164,7 +162,6 @@ export function getCachedPublicReleaseDetail(
         .select({
           projectId: project.id,
           releaseVersion: projectRelease.version,
-          releaseTitle: projectRelease.title,
           publishedAt: projectRelease.publishedAt,
           fileTitle: projectReleaseFile.title,
           contentMarkdown: projectReleaseFile.contentMarkdown,
@@ -189,7 +186,7 @@ export function getCachedPublicReleaseDetail(
       return {
         projectId: row.projectId,
         releaseVersion: row.releaseVersion,
-        releaseTitle: row.releaseTitle,
+        releaseTitle: row.releaseVersion,
         publishedAt: row.publishedAt.toISOString(),
         fileTitle: row.fileTitle,
         markdown: row.contentMarkdown,
