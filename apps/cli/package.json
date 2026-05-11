@@ -1,7 +1,6 @@
 {
-  "name": "@slog/cli",
+  "name": "@slog-it/slog",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "bin": {
     "slog": "./index.ts"

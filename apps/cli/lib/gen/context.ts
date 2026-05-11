@@ -138,7 +138,7 @@ async function walkReleaseFolder(
   }
 }
 
-export async function buildReleaseFolderContext(
+async function buildReleaseFolderContext(
   gitRoot: string,
   release: string,
 ): Promise<GenContext["releaseFolder"]> {

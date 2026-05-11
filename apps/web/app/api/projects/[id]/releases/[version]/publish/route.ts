@@ -19,6 +19,7 @@ import {
   type PublishBody,
 } from "@/lib/publish/validate"
 import { revalidatePublicChangelogRelease } from "@/lib/public-changelog-cache"
+import { projectPublicUrl } from "@/lib/public-url"
 
 export async function POST(
   request: NextRequest,
@@ -98,6 +99,7 @@ export async function POST(
       },
       upToDate: true,
       uploadedFileCount: 0,
+      publicUrl: projectPublicUrl(id),
     })
   }
 
@@ -121,6 +123,7 @@ export async function POST(
     },
     upToDate: false,
     uploadedFileCount: uploadedFiles.value.length,
+    publicUrl: projectPublicUrl(id),
   })
 }
 

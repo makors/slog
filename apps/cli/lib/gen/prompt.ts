@@ -14,7 +14,7 @@ Changes must be user-facing and impactful: new features, bug fixes, performance 
 
 A "good" list of changes should be:
 
-Short. While it may be possible to generate a changelog based off 50+ commits (and subsequently, 50+ changes), slog is intended to be run over time, accumulating smaller changes over time into a versioned system, which will be published at a later time. You should be ruthless in your selection of changes, especially for larger releases. A changelog should have 3-7 changes, and rarely more than that. For larger ranges, merge related reliability and compatibility fixes when they describe the same user workflow. Breaking changes override this functionality, ALWAYS include breaking changes.
+Short. While it may be possible to generate a changelog based off 50+ commits (and subsequently, 50+ changes), slog is intended to be run over time, accumulating smaller changes over time into a versioned system, which will be published at a later time. You should be ruthless in your selection of changes, especially for larger releases. A changelog should have 3-7 changes, and rarely more than that. For larger ranges, merge related reliability and compatibility fixes when they describe the same user workflow. If multiple changes are in the same category, they may not be in the same user workflow, and they should be analyzed and treated as such before merging. Breaking changes override this functionality, ALWAYS include breaking changes.
 
 Rich. When analyzing "commits," you are looking for the bigger picture - not just the individual commits (the what), but at what the larger picture is across commits/changes, and how it impacts the end-user. A "feature" (change) may span across commits; use the provided range as evidence and inspect likely commits when needed. If a feature is clearly WIP, it should not be included; on the contrary, if a feature becomes completed in a later commit, it should be included at that point. slog generates changelogs, not commit logs.
 
@@ -168,17 +168,31 @@ Bullet body: optional. Only add one or two sentences when needed for the reader 
 - If there are no breaking changes, say so after the intro: "No breaking changes are included in this release."
 - Almost never include dependency upgrades. Include one only when users need to act on it or it directly changes user-facing behavior, compatibility, security, or performance. A version bump alone — including RC → GA — is not changelog-worthy. If it must be included, it's a fix, not a feature.
 
+## Specificity in bodies
+
+Bullet bodies should be plain but technical. The reader may not know the codebase, but they're a developer — they have context for system-level concepts (TLS, signals, certificate stores, module evaluation, etc.) and they need enough specificity to recognize whether the change applies to them.
+
+Three levels of specificity, from worst to best:
+
+- Too vague: "macOS certificate handling is faster." (Reader can't tell if this affects them.)
+- Too internal: "Replaces SecTrustEvaluate with SecTrustEvaluateWithError in darwin/cert.zig." (Names internal symbols the reader doesn't care about.)
+- Plain but technical: "macOS avoids revocation network checks while enumerating keychain certificates, reducing startup stalls on managed or filtered networks." (Names the mechanism in terms the reader recognizes, ends on the practical consequence they'd observe.)
+
+When a change has a platform-conditional, environment-specific, or mechanism-level detail that helps the reader recognize their situation, keep it in the body. Cut it only when it's purely internal or doesn't change how the reader would diagnose the issue.
+
+**If the technical detail needs more than two sentences to land, it belongs in a detail page, not the body.**
+
 ## Detail pages
 
 A detail page is for actionable follow-up: migration steps, setup guidance, examples, screenshots, compatibility notes, or a new workflow that can't be explained in one entry.
 
-Detail pages have a cost. If a page would contain less than ~150 words of genuinely actionable content, inline what matters into the bullet body and skip the page. A thin page is worse than no page.
+Detail pages have a cost. If a page would contain less than ~150 words of genuinely actionable content, inline what matters into the bullet body and skip the page. A thin page is worse than no page. Fixes, unless they definitively require a detail page, should not have a detail page - improvements are more lenient, but still not as lenient as breaking changes.
 
 When a bullet has a detail page, link the bullet title itself:
 
-✓ **[Safer SSR and HMR exports](./ssr-hmr-concurrency.md).** Fixes a race where concurrent imports could expose partially initialized exports.
+Good: **[Safer SSR and HMR exports](./ssr-hmr-concurrency.md).** Fixes a race where concurrent imports could expose partially initialized exports.
 
-✗ **Safer SSR and HMR exports.** Fixes a race... See [SSR/HMR concurrency notes](./ssr-hmr-concurrency.md).
+Bad: **Safer SSR and HMR exports.** Fixes a race... See [SSR/HMR concurrency notes](./ssr-hmr-concurrency.md).
 
 ## Examples
 
@@ -215,11 +229,10 @@ index.md:
 
 \`\`\`
 ---
-title: "<release title>"
 release: "<release version>"
 ---
 
-[Brief introductory paragraph if appropriate. Contextual or summarizing sentences only, no list of changes. Not marketing — you're writing for developers.]
+[Brief introductory paragraph if appropriate. Contextual or summarizing sentences only, no list of changes. Not marketing — you're writing for developers. Should typically be around one sentence, but if necessary, can be longer up to 3 sentences.]
 
 No breaking changes are included in this release. (Only when true.)
 
@@ -230,6 +243,8 @@ No breaking changes are included in this release. (Only when true.)
 ## Fixes
 \`\`\`
 
+Do not include \`title\` in \`index.md\` frontmatter. The release title is inferred from the release version; old \`title\` values on \`index.md\` are deprecated and should not be preserved.
+
 Under each heading, entries take this shape:
 
 \`\`\`
@@ -238,7 +253,7 @@ Under each heading, entries take this shape:
 
 Only include sections with content. Use sentence-case headings.
 
-Detail pages use the same frontmatter shape:
+Detail pages still use title frontmatter:
 
 \`\`\`
 ---

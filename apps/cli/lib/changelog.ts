@@ -4,7 +4,7 @@ import { mkdir, stat, writeFile } from "node:fs/promises";
 const CHANGELOG_DIR = "changelogs";
 const GITKEEP_FILE = ".gitkeep";
 
-export function changelogDir(gitRoot: string): string {
+function changelogDir(gitRoot: string): string {
   return join(gitRoot, CHANGELOG_DIR);
 }
 

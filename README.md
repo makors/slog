@@ -20,11 +20,11 @@ lastly, slog is opinionated where it matters - it will still decide what constit
 
 ## quickstart / cli installation
 > [!IMPORTANT]
-> this assumes the hosted version is being used @ slog.makors.xyz - for local-only run `bunx @makors/slog init --local` ([bun](https://bun.com) must be installed). **windows is NOT supported, and wsl may be buggy.**
+> this assumes the hosted version is being used @ slog.makors.xyz - for local-only run `bunx @slog-it/slog init --local` ([bun](https://bun.com) must be installed). **windows is NOT supported, and wsl may be buggy.**
 
 
 1. visit https://slog.makors.xyz, login w/ github, create a project
-2. copy and run the command shown on screen (`bunx @makors/slog init [...]`)
+2. copy and run the command shown on screen (`bunx @slog-it/slog init [...]`)
 3. that's it! run `slog --help` for commands and look at [workflow](#workflow) / [configuration](#configuration)
 
 ## commands / usage
@@ -47,6 +47,7 @@ changelogs/
 ```
 
 `index.md` is the main changelog page for that release, keep it short and sweet.
+its title is the release version, so `index.md` only needs `release` frontmatter; `title` on `index.md` is deprecated.
 if you want to add more detail, you can add other markdown files in the same folder and link to them from `index.md`.
 
 > [!TIP]
@@ -107,7 +108,6 @@ slog tokens (`slog_...`) are stored in `~/.config/slog/[project-id]` w/ proper p
 5. visit `http://localhost:3000` and sign in!
 
 ## technical / product rationale
-
 
 TODO
 

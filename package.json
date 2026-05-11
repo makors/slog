@@ -9,15 +9,16 @@
     "packages/*"
   ],
   "scripts": {
-    "web:dev": "bun run --filter @slog/web dev",
-    "cli:dev": "bun run --filter @slog/cli dev",
+    "web:dev": "bun run --filter @slog-it/slog-web dev",
+    "cli:dev": "bun run --filter @slog-it/slog dev",
     "build": "bun run --workspaces --if-present build",
+    "vercel-build": "bun run --cwd apps/web db:migrate && bun run --cwd apps/web build",
     "lint": "bun run --workspaces --if-present lint",
     "test": "bun run --workspaces --if-present test",
-    "db:generate": "bun run --filter web db:generate",
-    "db:migrate": "bun run --filter web db:migrate",
-    "db:push": "bun run --filter web db:push",
-    "db:studio": "bun run --filter web db:studio"
+    "db:generate": "bun run --filter @slog-it/slog-web db:generate",
+    "db:migrate": "bun run --filter @slog-it/slog-web db:migrate",
+    "db:push": "bun run --filter @slog-it/slog-web db:push",
+    "db:studio": "bun run --filter @slog-it/slog-web db:studio"
   },
   "engines": {
     "bun": ">=1.3.6"

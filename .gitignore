@@ -1,4 +1,6 @@
 node_modules/
+.next/
+.vercel/
 dist/
 build/
 .env
@@ -6,3 +8,5 @@ build/
 !.env.example
 .DS_Store
 npm-debug.log*
+.vercel
+.env*.local

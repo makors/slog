@@ -9,6 +9,7 @@ import {
   revalidatePublicChangelogProject,
   revalidatePublicChangelogRelease,
 } from "@/lib/public-changelog-cache"
+import { projectPublicUrl } from "@/lib/public-url"
 
 const TOKEN_PATTERN = /^slog_[a-z0-9]{32}$/
 const MAX_RELEASES = 200
@@ -99,6 +100,7 @@ export async function POST(
     releaseCount: releases.length,
     deletedReleaseCount: deletedReleases.length,
     deletedReleases,
+    publicUrl: projectPublicUrl(id),
   })
 }
 

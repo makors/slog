@@ -54,7 +54,7 @@ function validateLlmConfig(config: LlmConfig): LlmConfig {
  * The "banner" shown when you run `slog gen --configure-llm`,
  * or when you run `slog gen` without an LLM configured.
  */
-export async function promptLlmConfig(): Promise<LlmConfig> {
+async function promptLlmConfig(): Promise<LlmConfig> {
   if (!isInteractive()) throw new Error(LLM_ENV_HINT);
 
   console.log(`${pc.bold("configure llm for changelog generation")}`);
@@ -78,7 +78,7 @@ you will need a base url, an api key, and a model name.
  * Configure the LLM for changelog generation,
  * prompting the user interactively.
  */
-export async function configureLlm() {
+async function configureLlm() {
   if (hasCompleteEnvConfig()) {
     info("env vars are set, this will update the stored llm.json for future runs");
   }

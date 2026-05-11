@@ -10,6 +10,7 @@ type ToolArgs = Record<string, unknown>;
 export type ShipwrightToolOptions = {
   release: string;
   releaseDir: string;
+  onWrite?: (path: string) => void;
 };
 
 function getString(args: ToolArgs, key: string): string {
@@ -148,6 +149,7 @@ export function createShipwrightTools(options: ShipwrightToolOptions): Tool[] {
 
         await mkdir(dirname(file.path), { recursive: true });
         await writeFile(file.path, content, "utf8");
+        options.onWrite?.(file.relativePath);
 
         return JSON.stringify({
           release: options.release,

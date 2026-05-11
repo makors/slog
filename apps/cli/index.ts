@@ -22,10 +22,10 @@ ${pc.bold("usage:")}
   slog <command> --help
 
 ${pc.bold("install:")}
-  bun i -g @makors/slog
+  bun i -g @slog-it/slog
 
 ${pc.bold("without global install:")}
-  bunx @makors/slog <command> [options]
+  bunx @slog-it/slog <command> [options]
 
 ${pc.bold("options:")}
   -h, --help show this help screen
@@ -100,10 +100,6 @@ const COMMAND_HELP_TEXT: Record<string, string> = {
   gen: GEN_HELP_TEXT,
   publish: PUBLISH_HELP_TEXT,
 };
-
-function helpTextFor(command: string | undefined) {
-  return command ? COMMAND_HELP_TEXT[command] : undefined;
-}
 
 function parseCliArgs(args: string[]) {
   if (args[0] === "init") {
@@ -205,7 +201,7 @@ async function main() {
     }
 
     if (flags.help || positionals.length === 0 || positionals[0] === "help") {
-      console.log(helpTextFor(helpCommand ?? positionals[0]) ?? HELP_TEXT);
+      console.log(COMMAND_HELP_TEXT[helpCommand ?? positionals[0]] ?? HELP_TEXT);
       process.exit(0);
     }
 

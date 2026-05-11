@@ -1,4 +1,4 @@
-import { chmod, mkdir, rm } from "node:fs/promises";
+import { chmod, mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
@@ -43,7 +43,7 @@ function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-export function isLlmConfig(value: unknown): value is LlmConfig {
+function isLlmConfig(value: unknown): value is LlmConfig {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
 
   const config = value as Record<string, unknown>;
@@ -117,10 +117,6 @@ export async function setToken(token: string, projectId: string) {
   await chmod(path, 0o600);
 }
 
-export async function clearToken(projectId: string) {
-  await rm(tokenPath(projectId), { force: true });
-}
-
 export async function getLlmConfig(): Promise<LlmConfig | null> {
   const file = Bun.file(LLM_CONFIG_PATH);
   if (!(await file.exists())) return null;
@@ -143,10 +139,6 @@ export async function setLlmConfig(config: LlmConfig) {
   await ensureCredentialsDir();
   await Bun.write(LLM_CONFIG_PATH, `${JSON.stringify(config, null, 2)}\n`);
   await chmod(LLM_CONFIG_PATH, 0o600);
-}
-
-export async function clearLlmConfig() {
-  await rm(LLM_CONFIG_PATH, { force: true });
 }
 
 async function ensureCredentialsDir() {

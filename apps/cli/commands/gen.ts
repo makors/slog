@@ -1,3 +1,4 @@
+import { join } from "node:path";
 import { success } from "../lib/cli";
 import { ensureChangelogReleaseDir } from "../lib/changelog";
 import { requireConfig } from "../lib/config";
@@ -62,6 +63,18 @@ function createStatusDetailMapper(getPhase: () => "analysis" | "shipwright") {
   };
 }
 
+function formatGeneratedChangelogTarget(releaseDir: string, files: string[]): string {
+  if (files.length === 1) {
+    return `wrote changelog to ${join(releaseDir, files[0]!)}`;
+  }
+
+  if (files.length > 1) {
+    return `wrote changelog files to ${releaseDir} (${files.join(", ")})`;
+  }
+
+  return `wrote changelog to ${releaseDir}`;
+}
+
 export async function gen(gitRef: string | undefined, options: GenOptions = {}) {
   // whether the user wants to configure llm api, url, and model ONLY (explicit cli flag)
   const configureOnly = options.configureLlm ?? false;
@@ -95,6 +108,7 @@ export async function gen(gitRef: string | undefined, options: GenOptions = {}) 
   const status = createAgentStatus({ initialDetail: "starting" });
   let phase: "analysis" | "shipwright" = "analysis";
   const statusDetail = createStatusDetailMapper(() => phase);
+  const writtenFiles: string[] = [];
   status.start();
 
   let draft: ChangelogDraft;
@@ -120,7 +134,13 @@ export async function gen(gitRef: string | undefined, options: GenOptions = {}) 
     await runAgent({
       system: SHIPWRIGHT_PROMPT,
       user: buildShipwrightUserPrompt(context, draft, { instructions: options.instructions }),
-      tools: createShipwrightTools({ release, releaseDir: releaseFolder.path }),
+      tools: createShipwrightTools({
+        release,
+        releaseDir: releaseFolder.path,
+        onWrite(path) {
+          if (!writtenFiles.includes(path)) writtenFiles.push(path);
+        },
+      }),
       maxSteps: 8,
       onProgress(event) {
         const detail = statusDetail(event);
@@ -132,6 +152,8 @@ export async function gen(gitRef: string | undefined, options: GenOptions = {}) 
   }
 
   const changeLabel = draft.changes.length === 1 ? "change" : "changes";
-  console.log(renderChangelogSummary(draft));
-  success(`generated ${draft.changes.length} ${changeLabel}; saved to ${releaseFolder.path}`);
+  process.stdout.write(`${renderChangelogSummary(draft)}\n\n`);
+  success(
+    `generated ${draft.changes.length} ${changeLabel}; ${formatGeneratedChangelogTarget(releaseFolder.path, writtenFiles)}`,
+  );
 }
