@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
   const redirectURL = new URL(url, request.nextUrl.origin);
 
   if (shouldForceGithubLogin) {
-    redirectURL.searchParams.set("prompt", "login");
+    redirectURL.searchParams.set("prompt", "select_account");
   }
 
   const headers = new Headers(response.headers);
