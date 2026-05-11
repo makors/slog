@@ -8,23 +8,23 @@ import { useCopy } from "@/hooks/use-copy"
 import { cn } from "@/lib/utils"
 
 interface VersionActionsProps {
-  anchorId: string
-  version: string
+  href: string
+  label: string
   markdown: string
 }
 
 export function VersionActions({
-  anchorId,
-  version,
+  href,
+  label,
   markdown,
 }: VersionActionsProps) {
   const copyUrl = useCopy()
   const copyMd = useCopy()
 
   const handleCopyUrl = useCallback(() => {
-    const url = `${window.location.origin}${window.location.pathname}#${anchorId}`
-    copyUrl.copy(url)
-  }, [anchorId, copyUrl])
+    const url = new URL(href, window.location.href)
+    copyUrl.copy(url.toString())
+  }, [href, copyUrl])
 
   const handleCopyMd = useCallback(() => {
     copyMd.copy(markdown)
@@ -39,9 +39,9 @@ export function VersionActions({
         className="text-muted-foreground/70 hover:text-foreground"
       >
         <a
-          href={`#${anchorId}`}
-          aria-label={`Permalink to ${version}`}
-          title={`Permalink to ${version}`}
+          href={href}
+          aria-label={`Permalink to ${label}`}
+          title={`Permalink to ${label}`}
         >
           <Hash className="size-3" />
         </a>

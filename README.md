@@ -16,8 +16,6 @@ the surface of the slog cli (and the web app) are intentionally simple: it's onl
 
 lastly, slog is opinionated where it matters - it will still decide what constitutes a breaking change, what gets more detail, etc. - though, as with any ai, its output should be carefully reviewed and revised by humans.
 
-## [demo (loom)](https://loom.com) TODO
-
 ## quickstart / cli installation
 > [!IMPORTANT]
 > this assumes the hosted version is being used @ slog.makors.xyz - for local-only run `bunx @slog-it/slog init --local` ([bun](https://bun.com) must be installed). **windows is NOT supported, and wsl may be buggy.**
@@ -28,10 +26,27 @@ lastly, slog is opinionated where it matters - it will still decide what constit
 3. that's it! run `slog --help` for commands and look at [workflow](#workflow) / [configuration](#configuration)
 
 ## commands / usage
-you can see this message by running `slog --help` (works per-command: `slog init --help`)
+you can see this message by running `slog --help` (also works per-command: `slog init --help`)
 
 ```
-TODO
+commands:
+  init       link this repo to slog
+  gen        generate a changelog from local git history
+  publish    publish local changelogs
+
+usage:
+  slog <command> [options]
+  slog <command> --help
+
+install:
+  bun i -g @slog-it/slog
+
+without global install:
+  bunx @slog-it/slog <command> [options]
+
+options:
+  -h, --help show a help screen
+  -v, --version shows the cli version
 ```
 
 ## workflow
@@ -109,7 +124,15 @@ slog tokens (`slog_...`) are stored in `~/.config/slog/[project-id]` w/ proper p
 
 ## technical / product rationale
 
-TODO
+**the setup for slog is meant to be easy and fast** - in part because of the "join code" system taken from github/vercel/etc. that later fetches the project information and tokens. the tokens themselves are self-contained to the project w/ limited access to metadata and publishing-only rights as to not introduce complexity on both the web and cli side (and, it acts for good security posture). sse is used to connect the cli to the browser w/ nextjs as a middleman to the exchange; it's fast!
+
+**the cli is intentionally independent from the web app** - rather than having the cli as a means of accessing with the content from the web app (think vercel, linear, etc.), the cli acts as the primary means of use for slog, where the web app is incidental for management, project creation, and changelog rendering. you could blow up us-east-1 and the slog cli would work once initialized, though there would probably be bigger problems to deal with in that case
+
+**byo-everything** - for slog, i intentionally took the approach of "bring-your-own everything" - as in, any git repo works (any provider) with many openai-compatible llm providers, as mentioned in the above point that slog is a tool, not a platform. in this context, creating changelogs as developers for developers, a centralized saas platform definitely isn't the right call - it's really only hosting a changelog / markdown file in the end.
+
+**slog lives where you work (a git repo)** - i really enjoy working with dev tools that don't require me to change my workflow significantly, so i tried using a bruno-style implementation w/ slog as to give the developer freedom in what they do with their changelogs. i did keep the "structure" somewhat strict, though: the `changelogs/` dir must live at the repo root, changelogs must be in a specific format, etc. - but only strict where it matters. there is no web editor (use your editor of choice!), or detail pages to manage - it's almost all within the repository pushed up to a hosted slog instance.
+
+**restrained by default, but active on breaking changes** - what makes a "good changelog" isn't really about the marketing prose often propagated by developer-tool companies (in this context), but rather, its a changelog that answers the developers question of "what do i need to know?", and fast. migration examples and breaking changes are prioritized by the agent, often being put into detail pages for further steps (i.e. code examples).
 
 ## stack
 

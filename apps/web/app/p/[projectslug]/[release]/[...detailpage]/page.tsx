@@ -14,6 +14,7 @@ import {
 } from "@/lib/seo"
 
 import { DetailBackLink } from "./detail-back-link"
+import { VersionActions } from "../../_components/version-actions"
 
 export const dynamic = "force-static"
 export const revalidate = false
@@ -91,6 +92,11 @@ export default async function ReleaseDetailPage({
   if (!row) notFound()
 
   const backHref = `/p/${projectslug}#${toAnchorId(row.releaseVersion)}`
+  const detailHref = releaseDetailPath({
+    projectSlug: projectslug,
+    releaseVersion: row.releaseVersion,
+    detailPage: detailpage,
+  })
 
   return (
     <main className="mx-auto flex w-full max-w-3xl flex-col gap-10 px-6 py-4 md:py-12">
@@ -101,6 +107,11 @@ export default async function ReleaseDetailPage({
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">
             {row.fileTitle}
           </h1>
+          <VersionActions
+            href={detailHref}
+            label={row.fileTitle}
+            markdown={row.markdown}
+          />
         </header>
 
         <article className="slog-markdown [&>:first-child]:mt-0">

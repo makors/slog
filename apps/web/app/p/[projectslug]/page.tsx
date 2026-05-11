@@ -129,8 +129,8 @@ export default async function ProjectPage({
                     {release.title}
                   </h1>
                   <VersionActions
-                    anchorId={anchorId}
-                    version={release.version}
+                    href={`#${anchorId}`}
+                    label={release.version}
                     markdown={release.markdown}
                   />
                   <div className="slog-markdown [&>:first-child]:mt-0">
